@@ -1,6 +1,7 @@
+import time
 from enum import Enum
 from multiprocessing import Process, Queue
-from typing import Optional, Callable
+from typing import Optional, Callable, Union
 
 from pydantic import BaseModel
 
@@ -14,6 +15,9 @@ class Signals(Enum):
 
 
 class Processor:
+    min_sleep_time = 0.001
+    max_sleep_time = 1
+
     def __init__(self,
                  target_function: Callable,
                  name: str,
@@ -91,12 +95,13 @@ class Processor:
              signal_queue: Queue,
              input_queue: Optional[Queue] = None,
              output_queue: Optional[Queue] = None):
+        sleep_time = Processor.min_sleep_time
         while True:
             # Check for data from the signal queue
             if not signal_queue.empty():
                 signal = signal_queue.get()
                 if signal == Signals.shutdown:
-                    print(f"Shutting down processor {processor_name}")
+                    logger.info(f"Shutting down processor {processor_name}")
                     return
             # Check for input if an input queue exists. If so, get input data from queue
             result = None
@@ -104,9 +109,21 @@ class Processor:
                 if not input_queue.empty():
                     input = input_queue.get()
                     result = target_function(input)
+                    # Reset sleep time since we got data
+                    sleep_time = Processor.min_sleep_time
+                else:
+                    sleep_time = Processor.update_sleep_time(sleep_time)
+                    time.sleep(sleep_time)
             # Otherwise, call target function without arguments
             else:
                 result = target_function()
             # If an output queue exists, push the result to the output queue
             if output_queue and result:
                 output_queue.put(result)
+
+    @staticmethod
+    def update_sleep_time(current_sleep_time: Union[float, int]) -> Union[float, int]:
+        if current_sleep_time <= Processor.max_sleep_time:
+            return current_sleep_time * 2
+        else:
+            return Processor.max_sleep_time
