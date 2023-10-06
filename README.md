@@ -15,7 +15,7 @@ inter-process communication, and clean process shutdown.
 
 ## Installation
 
-
+python -m pip install bowline-streaming
 
 ## Usage
 
