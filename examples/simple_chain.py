@@ -1,8 +1,8 @@
 import time
 
 from pydantic import BaseModel
-from bowline.models.processor import Processor
-from bowline.models.chain import ProcessorChain
+from bowline import Processor
+from bowline import ProcessorChain
 
 
 class AddInputModel(BaseModel):

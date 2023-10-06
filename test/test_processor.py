@@ -3,7 +3,7 @@ import unittest
 
 from pydantic import BaseModel
 
-from bowline.models.processor import Processor
+from bowline import Processor
 
 
 class AddInputModel(BaseModel):

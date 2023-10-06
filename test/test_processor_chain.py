@@ -3,8 +3,8 @@ import unittest
 
 from pydantic import BaseModel
 
-from bowline.models.chain import ProcessorChain
-from bowline.models.processor import Processor
+from bowline import ProcessorChain
+from bowline import Processor
 
 """
 Reusable classes for testing
