@@ -33,7 +33,7 @@ The following example shows creating and using a `Processor` that adds two numbe
 
 ```python
 from pydantic import BaseModel
-from bowline.models.processor import Processor
+from bowline import Processor
 
 
 class AddInputModel(BaseModel):
@@ -73,8 +73,8 @@ The following example shows creating and using a `ProcessorChain` that adds two 
 import time
 
 from pydantic import BaseModel
-from bowline.models.processor import Processor
-from bowline.models.chain import ProcessorChain
+from bowline import Processor
+from bowline import ProcessorChain
 
 
 class AddInputModel(BaseModel):
@@ -135,7 +135,12 @@ if __name__ == '__main__':
 
 Because Bowline uses `multiprocessing` behind the scenes, all data models must be serializable. 
 
-## Running the tests
+## Local Development
+
+1. Clone the repository: `git clone git@github.com:scottbarnesg/bowline.git`
+2. Install `bowline` as an interactive package: `python -m pip install -e .`
+
+### Running the tests
 
 1. Install the test dependencies: `python -m pip install -e .[dev]`
 2. Run the tests: `python -m pytest test/`
@@ -146,3 +151,4 @@ _Why is it called Bowline?_
 
 The Bowline knot makes a reasonably secure loop in the end of a piece of rope. 
 Two bowlines can be linked together to join two ropes.
+ 
