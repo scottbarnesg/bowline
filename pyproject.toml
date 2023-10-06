@@ -1,0 +1,18 @@
+[project]
+name = "bowline-streaming"
+version = "0.1.1"
+authors = [
+  { name="Scott Barnes", email="sgbarnes@protonmail.com" },
+]
+description = "Bowline: Easily build performant data stream processing pipelines in Python."
+readme = "README.md"
+requires-python = ">=3"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+]
+
+[project.urls]
+"Homepage" = "https://github.com/scottbarnesg/bowline"
+"Bug Tracker" = "https://github.com/scottbarnesg/bowline/issues"

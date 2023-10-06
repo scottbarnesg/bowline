@@ -1,7 +1,7 @@
 import setuptools
 
 setuptools.setup(
-    name="bowline",
+    name="bowline-streaming",
     description="Bowline: Easily build performant data stream processing pipelines in Python.",
     version="0.1.1",
     packages=setuptools.find_packages(),
