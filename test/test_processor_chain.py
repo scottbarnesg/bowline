@@ -59,16 +59,20 @@ class TestProcessorChain(unittest.TestCase):
             processor_chain.push_input(second_input_model)
             third_input_model = AddInputModel(x=123, y=456)
             processor_chain.push_input(third_input_model)
-            # Let the chain finish processing the inputs
+            # Wait for output
             while not processor_chain.has_output():
-                time.sleep(1)
+                pass
             # Verify the result are correct
             first_output = processor_chain.get_output()
-            assert first_output == square_number(add_two_numbers(first_input_model))
+            assert first_output.output == square_number(add_two_numbers(first_input_model))
+            while not processor_chain.has_output():
+                pass
             second_output = processor_chain.get_output()
-            assert second_output == square_number(add_two_numbers(second_input_model))
+            assert second_output.output == square_number(add_two_numbers(second_input_model))
+            while not processor_chain.has_output():
+                pass
             third_output = processor_chain.get_output()
-            assert third_output == square_number(add_two_numbers(third_input_model))
+            assert third_output.output == square_number(add_two_numbers(third_input_model))
         finally:
             # Shut down the processor chain
             processor_chain.shutdown()

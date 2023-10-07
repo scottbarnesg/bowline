@@ -40,19 +40,27 @@ class ProcessorChain:
         """
         if not self.processors:
             raise ValueError("No processors have been added to the chain. Nothing to start.")
+        self._build_processor_chain()
+        for processor in self.processors:
+            processor.start()
+
+    def _build_processor_chain(self):
+        if not self.processors:
+            raise ValueError("No processors have been added to the chain. Nothing to build.")
         # Walk the processors and make the output queue of each the input of the next.
         for index, processor in enumerate(self.processors):
             if index == 0:
                 continue
             # Make sure the previous processor's output and current processor's input match
-            previous_processor = self.processors[index-1]
+            previous_processor = self.processors[index - 1]
             if type(previous_processor.get_output_model()) is not type(previous_processor.get_input_model()):
-                raise ValueError(f"The output type of Processor {previous_processor.get_name()} does not match the input type of Processor {processor.get_name()}, which are {previous_processor.get_output_model()} and {processor.get_input_model()}")
+                raise ValueError(
+                    f"The output type of Processor {previous_processor.get_name()} does not match the input type of Processor {processor.get_name()}, which are {previous_processor.get_output_model()} and {processor.get_input_model()}")
             # Get the ouput queue of the previous processor and make it the input of this processor
-            logger.debug(f"Setting output queue of {previous_processor.get_name()} as input queue of {processor.get_name()}")
+            logger.debug(
+                f"Setting output queue of {previous_processor.get_name()} as input queue of {processor.get_name()}"
+            )
             processor.set_input_queue(previous_processor.get_output_queue())
-        for processor in self.processors:
-            processor.start()
 
     def shutdown(self):
         for processor in self.processors:
