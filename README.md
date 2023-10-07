@@ -53,7 +53,7 @@ def add_and_print(input: AddInputModel) -> AddOutputModel:
 if __name__ == '__main__':
     # Create and start processor
     addition_processor = Processor(target_function=add_and_print,
-                                   name="Add & Print",
+                                   name="add",
                                    input_model=AddInputModel,
                                    output_model=AddOutputModel)
     addition_processor.start()
@@ -115,11 +115,11 @@ def square_number(input: AddOutputModel) -> SquareOutputModel:
 if __name__ == '__main__':
     # Create processors
     add_two_numbers_processor = Processor(target_function=add_two_numbers,
-                                          name="Add two numbers",
+                                          name="add",
                                           input_model=AddInputModel,
                                           output_model=AddOutputModel)
     square_number_processor = Processor(target_function=square_number,
-                                        name="Square number",
+                                        name="square",
                                         input_model=AddOutputModel,
                                         output_model=SquareOutputModel)
     # Create process chain
@@ -229,7 +229,7 @@ if __name__ == '__main__':
         while not processor_graph.has_output():
             pass
         result = processor_graph.get_output()
-        print(f"Received result {result.value.result} from processor {result.processor}")
+        print(f"Received output {result.output} from processor {result.processor}")
     # Shut down processors
     processor_graph.shutdown()
 ```

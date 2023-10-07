@@ -41,15 +41,15 @@ class TestProcessorChain(unittest.TestCase):
                 pass
             # Verify the result are correct
             first_output = addition_processor.get_output()
-            assert first_output == add_two_numbers(first_input_model)
+            assert first_output.output == add_two_numbers(first_input_model)
             while not addition_processor.has_output():
                 pass
             second_output = addition_processor.get_output()
-            assert second_output == add_two_numbers(second_input_model)
+            assert second_output.output == add_two_numbers(second_input_model)
             while not addition_processor.has_output():
                 pass
             third_output = addition_processor.get_output()
-            assert third_output == add_two_numbers(third_input_model)
+            assert third_output.output == add_two_numbers(third_input_model)
         finally:
             # Shut down the processor
             addition_processor.shutdown()

@@ -56,7 +56,7 @@ class ProcessorGraph:
         #  How to balance return values from all processors?
         for terminal_processor in self._get_terminal_processors():
             if terminal_processor.has_output():
-                return Result(processor=terminal_processor.get_name(), value=terminal_processor.get_output())
+                return terminal_processor.get_output()
 
     def start(self):
         if not self._processor_graph:

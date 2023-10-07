@@ -73,9 +73,9 @@ class TestProcessorChain(unittest.TestCase):
                     pass
                 result = processor_graph.get_output()
                 if result.processor == square_number_processor.get_name():
-                    assert result.value == square_number(add_two_numbers(input))
+                    assert result.output == square_number(add_two_numbers(input))
                 else:  # sqrt
-                    assert result.value == square_root(add_two_numbers(input))
+                    assert result.output == square_root(add_two_numbers(input))
             # Push another input value
             input = AddInputModel(x=3, y=4)
             processor_graph.push_input(input)
@@ -86,9 +86,9 @@ class TestProcessorChain(unittest.TestCase):
                     pass
                 result = processor_graph.get_output()
                 if result.processor == square_number_processor.get_name():
-                    assert result.value == square_number(add_two_numbers(input))
+                    assert result.output == square_number(add_two_numbers(input))
                 else:  # sqrt
-                    assert result.value == square_root(add_two_numbers(input))
+                    assert result.output == square_root(add_two_numbers(input))
             # Push another input with larger values
             input = AddInputModel(x=123, y=456)
             processor_graph.push_input(input)
@@ -99,9 +99,9 @@ class TestProcessorChain(unittest.TestCase):
                     pass
                 result = processor_graph.get_output()
                 if result.processor == square_number_processor.get_name():
-                    assert result.value == square_number(add_two_numbers(input))
+                    assert result.output == square_number(add_two_numbers(input))
                 else:  # sqrt
-                    assert result.value == square_root(add_two_numbers(input))
+                    assert result.output == square_root(add_two_numbers(input))
         finally:
             # Shut down processors
             processor_graph.shutdown()

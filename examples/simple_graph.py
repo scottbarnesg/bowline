@@ -72,6 +72,6 @@ if __name__ == '__main__':
         while not processor_graph.has_output():
             pass
         result = processor_graph.get_output()
-        print(f"Received result {result.value.result} from processor {result.processor}")
+        print(f"Received output {result.output} from processor {result.processor}")
     # Shut down processors
     processor_graph.shutdown()

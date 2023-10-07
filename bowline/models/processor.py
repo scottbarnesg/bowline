@@ -5,6 +5,7 @@ from typing import Optional, Callable, Union, List, Type
 
 from pydantic import BaseModel
 
+from bowline.models.result import Result
 from bowline.utils.logger import get_logger
 
 logger = get_logger(__name__)
@@ -54,12 +55,12 @@ class Processor:
             raise ValueError("Input queue does not exists. Did you specify an input model?")
         self._input_queue.put(input)
 
-    def get_output(self) -> Optional[BaseModel]:
+    def get_output(self) -> Optional[Result]:
         if not self._output_queues or all(output_queue.empty() for output_queue in self._output_queues):
             return None
         for output_queue in self._output_queues:
             if not output_queue.empty():
-                return output_queue.get()
+                return Result(processor=self.name, output=output_queue.get())
 
     def has_output(self) -> bool:
         return self._output_queues and any(not output_queue.empty() for output_queue in self._output_queues)

@@ -19,7 +19,7 @@ def add_and_print(input: AddInputModel) -> AddOutputModel:
 if __name__ == '__main__':
     # Create and start processor
     addition_processor = Processor(target_function=add_and_print,
-                                   name="Add & Print",
+                                   name="add",
                                    input_model=AddInputModel,
                                    output_model=AddOutputModel)
     addition_processor.start()

@@ -64,15 +64,15 @@ class TestProcessorChain(unittest.TestCase):
                 pass
             # Verify the result are correct
             first_output = processor_chain.get_output()
-            assert first_output == square_number(add_two_numbers(first_input_model))
+            assert first_output.output == square_number(add_two_numbers(first_input_model))
             while not processor_chain.has_output():
                 pass
             second_output = processor_chain.get_output()
-            assert second_output == square_number(add_two_numbers(second_input_model))
+            assert second_output.output == square_number(add_two_numbers(second_input_model))
             while not processor_chain.has_output():
                 pass
             third_output = processor_chain.get_output()
-            assert third_output == square_number(add_two_numbers(third_input_model))
+            assert third_output.output == square_number(add_two_numbers(third_input_model))
         finally:
             # Shut down the processor chain
             processor_chain.shutdown()

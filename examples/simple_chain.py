@@ -30,11 +30,11 @@ def square_number(input: AddOutputModel) -> SquareOutputModel:
 if __name__ == '__main__':
     # Create processors
     add_two_numbers_processor = Processor(target_function=add_two_numbers,
-                                          name="Add two numbers",
+                                          name="add",
                                           input_model=AddInputModel,
                                           output_model=AddOutputModel)
     square_number_processor = Processor(target_function=square_number,
-                                        name="Square number",
+                                        name="square",
                                         input_model=AddOutputModel,
                                         output_model=SquareOutputModel)
     # Create process chain
