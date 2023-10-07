@@ -13,7 +13,7 @@ class AddOutputModel(BaseModel):
 
 def add_and_print(input: AddInputModel) -> AddOutputModel:
     result = input.x + input.y
-    return result
+    return AddOutputModel(result=result)
 
 
 if __name__ == '__main__':

@@ -1,6 +1,5 @@
-import time
-
 from pydantic import BaseModel
+
 from bowline import Processor
 from bowline import ProcessorChain
 
