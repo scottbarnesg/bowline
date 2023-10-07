@@ -1,6 +1,6 @@
 from pydantic import BaseModel
 
 
-class Output(BaseModel):
+class Result(BaseModel):
     processor: str
-    output: BaseModel
+    value: BaseModel

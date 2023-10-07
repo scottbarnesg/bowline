@@ -5,6 +5,7 @@ from typing import Dict, List, Optional
 from pydantic import BaseModel
 
 from bowline.models.processor import Processor
+from bowline.models.result import Result
 from bowline.utils.logger import get_logger
 
 
@@ -44,13 +45,18 @@ class ProcessorGraph:
                 f"Input is of type {type(input)}, but the {first_processor.get_name()} processor expects a {first_processor.get_input_model()}")
         first_processor.push_input(input)
 
-    def get_output(self) -> Optional[BaseModel]:
-        # TODO: Implement
-        #    Need a way to map ouputs to which Processor they came from. Create data class?
-        # TODO: Get terminal proceesors.
-        # TODO: Iterate terminal processors and see if any has an output.
-        # TODO: Return output associated with Processor it came from.
-        raise NotImplementedError
+    def has_output(self) -> bool:
+        for terminal_processor in self._get_terminal_processors():
+            if terminal_processor.has_output():
+                return True
+        return False
+
+    def get_output(self) -> Optional[Result]:
+        # TODO: This implementation is biased based on order of the terminal Processors.
+        #  How to balance return values from all processors?
+        for terminal_processor in self._get_terminal_processors():
+            if terminal_processor.has_output():
+                return Result(processor=terminal_processor.get_name(), value=terminal_processor.get_output())
 
     def start(self):
         if not self._processor_graph:

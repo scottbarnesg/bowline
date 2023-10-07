@@ -62,7 +62,7 @@ class Processor:
                 return output_queue.get()
 
     def has_output(self) -> bool:
-        return self._output_queues and not all(output_queue.empty() for output_queue in self._output_queues)
+        return self._output_queues and any(not output_queue.empty() for output_queue in self._output_queues)
 
     def get_name(self) -> str:
         return self.name
@@ -78,6 +78,13 @@ class Processor:
 
     def set_input_queue(self, queue: Queue):
         self._input_queue = queue
+
+    def get_output_queue(self) -> Optional[Queue]:
+        if len(self._output_queues) > 1:
+            raise ValueError(f"Processor has multiple output queues. Unable to determine which queue should be retrieved.")
+        if not self._output_queues:
+            return None
+        return self._output_queues[0]
 
     def get_output_queues(self) -> Optional[List[Queue]]:
         return self._output_queues
@@ -95,7 +102,7 @@ class Processor:
             self._input_queue = Queue()
         if self.output_model:
             # By default, create one output queue. This can be overridden using add_output_queue()
-            self._output_queue = [Queue()]
+            self._output_queues = [Queue()]
 
     @staticmethod
     def _run(processor_name: str,
@@ -109,7 +116,7 @@ class Processor:
             if not signal_queue.empty():
                 signal = signal_queue.get()
                 if signal == Signals.shutdown:
-                    logger.info(f"Shutting down processor {processor_name}")
+                    logger.info(f"Shutting down background process for processor {processor_name}...")
                     return
             # Check for input if an input queue exists. If so, get input data from queue
             result = None

@@ -18,6 +18,7 @@ class AddOutputModel(BaseModel):
 class SquareOutputModel(BaseModel):
     result: int
 
+
 class SquareRootOutputModel(BaseModel):
     result: float
 
@@ -43,15 +44,15 @@ def square_root(input: AddOutputModel) -> SquareRootOutputModel:
 if __name__ == '__main__':
     # Create processors
     add_two_numbers_processor = Processor(target_function=add_two_numbers,
-                                          name="Add two numbers",
+                                          name="addition",
                                           input_model=AddInputModel,
                                           output_model=AddOutputModel)
     square_number_processor = Processor(target_function=square_number,
-                                        name="Square number",
+                                        name="square",
                                         input_model=AddOutputModel,
                                         output_model=SquareOutputModel)
     square_root_processor = Processor(target_function=square_root,
-                                      name="Square root",
+                                      name="sqrt",
                                       input_model=AddOutputModel,
                                       output_model=SquareRootOutputModel)
     # Create ProcessorGraph
@@ -64,10 +65,14 @@ if __name__ == '__main__':
     processor_graph.start()
     # Push input to graph
     processor_graph.push_input(AddInputModel(x=2, y=2))
-    time.sleep(1)  # Delay to show output from process chain
     processor_graph.push_input(AddInputModel(x=3, y=4))
-    time.sleep(1)
     processor_graph.push_input(AddInputModel(x=123, y=456))
-    time.sleep(1)
+    # Wait for results to be available
+    while not processor_graph.has_output():
+        time.sleep(1)
+    # Get results
+    for _ in range(6):
+        result = processor_graph.get_output()
+        print(f"Received result {result.value.result} from processor {result.processor}")
     # Shut down processors
     processor_graph.shutdown()
