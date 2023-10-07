@@ -18,11 +18,12 @@ class ProcessorGraph:
 
     def add_processor(self, new_processor: Processor, previous_processor: Optional[Processor] = None):
         # If previous_processor is not supplied, this is the first processor.
-        if not previous_processor:
+        if not previous_processor:  # TODO: Logic got mixed up here.
             # If the graph isn't empty, need a previous_processor to link new_processor to
             if self._processor_graph:
                 raise ValueError("ProcessorGraph already contains one or more Processors. "
                                  "You must provide a previous processor to link it to.")
+        else:
             # Verify previous_processor is already in the _processor_graph
             if previous_processor not in self._processor_graph.keys():
                 raise ValueError(f"{previous_processor} has not been added to the ProcessorGraph.")
@@ -30,9 +31,9 @@ class ProcessorGraph:
             if new_processor in self._processor_graph[previous_processor]:
                 raise ValueError(f"{new_processor} is already linked to {previous_processor}.")
             self._processor_graph[previous_processor].append(new_processor)
-            # Add new processor as a key to _processor_graph, if it doesn't exist already.
-            if new_processor not in self._processor_graph.keys():
-                self._processor_graph[new_processor] = []
+        # Add new processor as a key to _processor_graph, if it doesn't exist already.
+        if new_processor not in self._processor_graph.keys():
+            self._processor_graph[new_processor] = []
 
     def push_input(self, input: BaseModel):
         if not self._processor_graph:
@@ -43,6 +44,14 @@ class ProcessorGraph:
                 f"Input is of type {type(input)}, but the {first_processor.get_name()} processor expects a {first_processor.get_input_model()}")
         first_processor.push_input(input)
 
+    def get_output(self) -> Optional[BaseModel]:
+        # TODO: Implement
+        #    Need a way to map ouputs to which Processor they came from. Create data class?
+        # TODO: Get terminal proceesors.
+        # TODO: Iterate terminal processors and see if any has an output.
+        # TODO: Return output associated with Processor it came from.
+        raise NotImplementedError
+
     def start(self):
         if not self._processor_graph:
             raise ValueError("There are no processors in the graph. Nothing to start.")
@@ -50,6 +59,10 @@ class ProcessorGraph:
         self._build_processor_chain()
         # Start processors
         self._start_all_processors()
+
+    def shutdown(self):
+        for processor in self._processor_graph.keys():
+            processor.shutdown()
 
     def _build_processor_chain(self):
         # Walk the processor graph.
@@ -62,7 +75,7 @@ class ProcessorGraph:
                 new_queue = Queue()
                 source_processor.add_output_queue(new_queue)
                 target_processor.set_input_queue(new_queue)
-                logger.info(f"Setting output queue of {source_processor} as input queue of {target_processor}")
+                logger.info(f"Setting output queue of {source_processor.get_name()} as input queue of {target_processor.get_name()}")
 
     def _start_all_processors(self):
         for processor in self._processor_graph.keys():
@@ -75,8 +88,6 @@ class ProcessorGraph:
         return next(iter(self._processor_graph))
 
     def _get_terminal_processors(self) -> List[Processor]:
-        # TODO: Implement
-        #     Is this just the processors in the keys of the graph with any empty list?
         terminal_processors = []
         for source_processor, target_processors in self._processor_graph.items():
             if not target_processors:
