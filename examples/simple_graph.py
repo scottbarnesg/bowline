@@ -67,11 +67,11 @@ if __name__ == '__main__':
     processor_graph.push_input(AddInputModel(x=2, y=2))
     processor_graph.push_input(AddInputModel(x=3, y=4))
     processor_graph.push_input(AddInputModel(x=123, y=456))
-    # Wait for results to be available
-    while not processor_graph.has_output():
-        time.sleep(1)
     # Get results
-    for _ in range(6):
+    for _ in range(6):  # We provided 3 inputs, and there are 2 terminal Processors, so 6 total results
+        # Wait for results to be available
+        while not processor_graph.has_output():
+            pass
         result = processor_graph.get_output()
         print(f"Received result {result.value.result} from processor {result.processor}")
     # Shut down processors

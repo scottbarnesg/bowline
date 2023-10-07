@@ -36,14 +36,18 @@ class TestProcessorChain(unittest.TestCase):
             addition_processor.push_input(second_input_model)
             third_input_model = AddInputModel(x=123, y=456)
             addition_processor.push_input(third_input_model)
-            # Let the processor finish processing the inputs
+            # Wait for results
             while not addition_processor.has_output():
-                time.sleep(1)
+                pass
             # Verify the result are correct
             first_output = addition_processor.get_output()
             assert first_output == add_two_numbers(first_input_model)
+            while not addition_processor.has_output():
+                pass
             second_output = addition_processor.get_output()
             assert second_output == add_two_numbers(second_input_model)
+            while not addition_processor.has_output():
+                pass
             third_output = addition_processor.get_output()
             assert third_output == add_two_numbers(third_input_model)
         finally:

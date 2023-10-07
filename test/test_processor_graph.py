@@ -70,7 +70,7 @@ class TestProcessorChain(unittest.TestCase):
             for _ in range(2):
                 # Wait for results to be available
                 while not processor_graph.has_output():
-                    yield
+                    pass
                 result = processor_graph.get_output()
                 if result.processor == square_number_processor.get_name():
                     assert result.value == square_number(add_two_numbers(input))
@@ -83,7 +83,7 @@ class TestProcessorChain(unittest.TestCase):
             for _ in range(2):
                 # Wait for results to be available
                 while not processor_graph.has_output():
-                    yield
+                    pass
                 result = processor_graph.get_output()
                 if result.processor == square_number_processor.get_name():
                     assert result.value == square_number(add_two_numbers(input))
@@ -96,7 +96,7 @@ class TestProcessorChain(unittest.TestCase):
             for _ in range(2):
                 # Wait for results to be available
                 while not processor_graph.has_output():
-                    yield
+                    pass
                 result = processor_graph.get_output()
                 if result.processor == square_number_processor.get_name():
                     assert result.value == square_number(add_two_numbers(input))

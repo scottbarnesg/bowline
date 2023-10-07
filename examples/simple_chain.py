@@ -44,16 +44,16 @@ if __name__ == '__main__':
     processor_chain.add_processor(square_number_processor)
     # Start the processor chain
     processor_chain.start()
-    # Push some data to the chain
+    # Push some data to the chain. This will add the numbers, then square them.
     processor_chain.push_input(AddInputModel(x=2, y=2))
     processor_chain.push_input(AddInputModel(x=3, y=4))
     processor_chain.push_input(AddInputModel(x=123, y=456))
-    # Push some data to the chain. This will add the numbers, then square them.
-    while not processor_chain.has_output():
-        time.sleep(1)
     # Get the results
     print(f"Results: ")
     for _ in range(3):
+        # Wait for output
+        while not processor_chain.has_output():
+            pass
         print(processor_chain.get_output())
     # Shut down the processor chain
     processor_chain.shutdown()
