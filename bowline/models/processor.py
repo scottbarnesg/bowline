@@ -1,7 +1,7 @@
 import time
 from enum import Enum
 from multiprocessing import Process, Queue
-from typing import Optional, Callable, Union, List
+from typing import Optional, Callable, Union, List, Type
 
 from pydantic import BaseModel
 
@@ -21,8 +21,8 @@ class Processor:
     def __init__(self,
                  target_function: Callable,
                  name: str,
-                 input_model: Optional[BaseModel] = None,
-                 output_model: Optional[BaseModel] = None):
+                 input_model: Optional[Type[BaseModel]] = None,
+                 output_model: Optional[Type[BaseModel]] = None):
         self.target_function = target_function
         self.name = name
         self.input_model = input_model
