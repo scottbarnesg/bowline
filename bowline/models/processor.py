@@ -1,7 +1,7 @@
 import time
 from enum import Enum
 from multiprocessing import Process, Queue
-from typing import Optional, Callable, Union
+from typing import Optional, Callable, Union, List
 
 from pydantic import BaseModel
 
@@ -29,7 +29,7 @@ class Processor:
         self.output_model = output_model
         self._signal_queue = Queue()
         self._input_queue = None
-        self._output_queue = None
+        self._output_queues = []
         self._process = None
         # Run setup
         self._setup()
@@ -38,8 +38,8 @@ class Processor:
         if self._process:
             raise RuntimeError(f"This processor has already been started. You cannot start it again.")
         self._process = Process(target=self._run,
-                                args=[self.name, self.target_function, self._signal_queue, self._input_queue,
-                                      self._output_queue])
+                                args=(self.name, self.target_function, self._signal_queue, self._input_queue,
+                                      self._output_queues))
         logger.info(f"Starting processor {self.name}...")
         self._process.start()
 
@@ -55,12 +55,14 @@ class Processor:
         self._input_queue.put(input)
 
     def get_output(self) -> Optional[BaseModel]:
-        if not self._output_queue or self._output_queue.empty():
+        if not self._output_queues or all(output_queue.empty() for output_queue in self._output_queues):
             return None
-        return self._output_queue.get()
+        for output_queue in self._output_queues:
+            if not output_queue.empty():
+                return output_queue.get()
 
     def has_output(self) -> bool:
-        return self._output_queue and not self._output_queue.empty()
+        return self._output_queues and not all(output_queue.empty() for output_queue in self._output_queues)
 
     def get_name(self) -> str:
         return self.name
@@ -77,24 +79,30 @@ class Processor:
     def set_input_queue(self, queue: Queue):
         self._input_queue = queue
 
-    def get_output_queue(self) -> Optional[Queue]:
-        return self._output_queue
+    def get_output_queues(self) -> Optional[List[Queue]]:
+        return self._output_queues
 
-    def set_output_queue(self, queue: Queue):
-        self._output_queue = queue
+    def add_output_queue(self, queue: Queue):
+        if queue in self._output_queues:
+            raise ValueError(f"{queue} is already set as an output queue.")
+        self._output_queues.append(queue)
+
+    def clear_output_queues(self):
+        self._output_queues = []
 
     def _setup(self):
         if self.input_model:
             self._input_queue = Queue()
         if self.output_model:
-            self._output_queue = Queue()
+            # By default, create one output queue. This can be overridden using add_output_queue()
+            self._output_queue = [Queue()]
 
     @staticmethod
     def _run(processor_name: str,
              target_function: Callable,
              signal_queue: Queue,
              input_queue: Optional[Queue] = None,
-             output_queue: Optional[Queue] = None):
+             output_queues: Optional[List[Queue]] = None):
         sleep_time = Processor.min_sleep_time
         while True:
             # Check for data from the signal queue
@@ -118,8 +126,9 @@ class Processor:
             else:
                 result = target_function()
             # If an output queue exists, push the result to the output queue
-            if output_queue and result:
-                output_queue.put(result)
+            if output_queues and result:
+                for output_queue in output_queues:
+                    output_queue.put(result)
 
     @staticmethod
     def update_sleep_time(current_sleep_time: Union[float, int]) -> Union[float, int]:
