@@ -16,6 +16,9 @@ class ProcessorGraph:
     def __init__(self):
         # _processor_graph maps a Processor to the Processors that follow it in the graph.
         self._processor_graph: Dict[Processor, List[Processor]] = OrderedDict()
+        # Tracks which processor's output to handle next. This helps balance outputs between processors
+        # This is incremented first, so setting this to -1 makes it so that the 0th terminal processor is called first
+        self._current_terminal_processor_index = -1
 
     def add_processor(self, new_processor: Processor, previous_processor: Optional[Processor] = None):
         # If previous_processor is not supplied, this is the first processor.
@@ -52,11 +55,22 @@ class ProcessorGraph:
         return False
 
     def get_output(self) -> Optional[Result]:
-        # TODO: This implementation is biased based on order of the terminal Processors.
-        #  How to balance return values from all processors?
-        for terminal_processor in self._get_terminal_processors():
+        """
+        This implementation balances outputs between the terminal processors
+        """
+        for _ in range(len(self._get_terminal_processors())):
+            terminal_processor = self._get_next_terminal_processor()
             if terminal_processor.has_output():
                 return terminal_processor.get_output()
+
+    def _get_next_terminal_processor(self) -> Processor:
+        # Update current output queue index
+        self._current_terminal_processor_index += 1
+        if self._current_terminal_processor_index >= len(self._get_terminal_processors()):
+            self._current_terminal_processor_index = 0
+        print(f"Terminal processor index is {self._current_terminal_processor_index}")
+        # Return that output queue
+        return self._get_terminal_processors()[self._current_terminal_processor_index]
 
     def start(self):
         if not self._processor_graph:
