@@ -1,6 +1,6 @@
 [project]
 name = "bowline-streaming"
-version = "0.2.0"
+version = "0.2.1"
 authors = [
   { name="Scott Barnes", email="sgbarnes@protonmail.com" },
 ]
@@ -11,6 +11,14 @@ classifiers = [
     "Programming Language :: Python :: 3",
     "License :: OSI Approved :: MIT License",
     "Operating System :: OS Independent",
+]
+dependencies=[
+    "pydantic>=2",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest"
 ]
 
 [project.urls]
