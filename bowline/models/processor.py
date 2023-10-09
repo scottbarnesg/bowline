@@ -1,7 +1,7 @@
 import time
 from enum import Enum
-from multiprocessing import Process, Queue
-from typing import Optional, Callable, Union, List, Type
+from multiprocessing import Process, Queue, Value
+from typing import Optional, Callable, Union, List, Type, Dict
 
 from pydantic import BaseModel
 
@@ -15,6 +15,10 @@ class Signals(Enum):
     shutdown = "shutdown"
 
 
+class Stats(Enum):
+    inputs_processed = "inputs_processed"
+
+
 class Processor:
     min_sleep_time = 0.001
     max_sleep_time = 1
@@ -23,30 +27,40 @@ class Processor:
                  target_function: Callable,
                  name: str,
                  input_model: Optional[Type[BaseModel]] = None,
-                 output_model: Optional[Type[BaseModel]] = None):
+                 output_model: Optional[Type[BaseModel]] = None,
+                 instances: Optional[int] = 1):
         self.target_function = target_function
         self.name = name
         self.input_model = input_model
         self.output_model = output_model
-        self._signal_queue = Queue()
+        self.instances = instances
+        self._signal_queues = [Queue() for _ in range(instances)]  # TODO: Make this a list to handle shutdown of multiple processes?
         self._input_queue = None
         self._output_queues = []
-        self._process = None
+        self._processes = []
+        self._stats = dict()
         # Run setup
         self._setup()
 
     def start(self):
-        if self._process:
+        if self._processes:
             raise RuntimeError(f"This processor has already been started. You cannot start it again.")
-        self._process = Process(target=self._run,
-                                args=(self.name, self.target_function, self._signal_queue, self._input_queue,
-                                      self._output_queues))
+        for instance in range(self.instances):
+            process = Process(target=self._run,
+                              args=(self.name, instance, self.target_function,
+                                    self._stats[instance][Stats.inputs_processed.value], self._signal_queues[instance],
+                                    self._input_queue, self._output_queues))
+            self._processes.append(process)
         logger.info(f"Starting processor {self.name}...")
-        self._process.start()
+        for process in self._processes:
+            process.start()
 
     def shutdown(self):
         logger.info(f"Shutting down processor {self.name}...")
-        self._signal_queue.put(Signals.shutdown)
+        # while any(process.is_alive() for process in self._processes):
+        for i in range(self.instances):
+            self._signal_queues[i].put(Signals.shutdown)
+            self._processes[i].join()
 
     def push_input(self, input: BaseModel):
         if not self.input_model:
@@ -82,7 +96,8 @@ class Processor:
 
     def get_output_queue(self) -> Optional[Queue]:
         if len(self._output_queues) > 1:
-            raise ValueError(f"Processor has multiple output queues. Unable to determine which queue should be retrieved.")
+            raise ValueError(
+                f"Processor has multiple output queues. Unable to determine which queue should be retrieved.")
         if not self._output_queues:
             return None
         return self._output_queues[0]
@@ -98,16 +113,25 @@ class Processor:
     def clear_output_queues(self):
         self._output_queues = []
 
+    def get_stats(self) -> Dict[int, any]:
+        return self._stats
+
     def _setup(self):
         if self.input_model:
             self._input_queue = Queue()
         if self.output_model:
             # By default, create one output queue. This can be overridden using add_output_queue()
             self._output_queues = [Queue()]
+        for i in range(self.instances):
+            self._stats[i] = {
+                Stats.inputs_processed.value: Value('i', 0)
+            }
 
     @staticmethod
     def _run(processor_name: str,
+             instance: int,
              target_function: Callable,
+             inputs_processed: Value,
              signal_queue: Queue,
              input_queue: Optional[Queue] = None,
              output_queues: Optional[List[Queue]] = None):
@@ -117,7 +141,7 @@ class Processor:
             if not signal_queue.empty():
                 signal = signal_queue.get()
                 if signal == Signals.shutdown:
-                    logger.info(f"Shutting down background process for processor {processor_name}...")
+                    logger.info(f"Shutting down instance {instance} for processor {processor_name}...")
                     return
             # Check for input if an input queue exists. If so, get input data from queue
             result = None
@@ -127,6 +151,10 @@ class Processor:
                     result = target_function(input)
                     # Reset sleep time since we got data
                     sleep_time = Processor.min_sleep_time
+                    # Update stats
+                    with inputs_processed.get_lock():
+                        inputs_processed.value += 1
+                    logger.info(f"Processed points for instance {instance}: {inputs_processed.value}")
                 else:
                     sleep_time = Processor.update_sleep_time(sleep_time)
                     time.sleep(sleep_time)
