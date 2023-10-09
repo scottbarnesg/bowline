@@ -1,7 +1,7 @@
-import time
+import queue
 from enum import Enum
 from multiprocessing import Process, Queue, Value
-from typing import Optional, Callable, Union, List, Type, Dict
+from typing import Optional, Callable, List, Type, Dict
 
 from pydantic import BaseModel
 
@@ -20,9 +20,6 @@ class Stats(Enum):
 
 
 class Processor:
-    min_sleep_time = 0.001
-    max_sleep_time = 1
-
     def __init__(self,
                  target_function: Callable,
                  name: str,
@@ -34,7 +31,7 @@ class Processor:
         self.input_model = input_model
         self.output_model = output_model
         self.instances = instances
-        self._signal_queues = [Queue() for _ in range(instances)]  # TODO: Make this a list to handle shutdown of multiple processes?
+        self._signal_queues = [Queue() for _ in range(instances)]
         self._input_queue = None
         self._output_queues = []
         self._processes = []
@@ -57,10 +54,15 @@ class Processor:
 
     def shutdown(self):
         logger.info(f"Shutting down processor {self.name}...")
-        # while any(process.is_alive() for process in self._processes):
-        for i in range(self.instances):
-            self._signal_queues[i].put(Signals.shutdown)
-            self._processes[i].join()
+        alive_processes = [process for process in self._processes if process.is_alive()]
+        while alive_processes:
+            for i in range(self.instances):
+                if self._processes[i].is_alive():
+                    self._signal_queues[i].put(Signals.shutdown.value)
+                    logger.info(f"Waiting for process {self.name} instance {i} to shut down...")
+                    self._processes[i].join(timeout=10)
+            alive_processes = [process for process in self._processes if process.is_alive()]
+            logger.info(alive_processes)
 
     def push_input(self, input: BaseModel):
         if not self.input_model:
@@ -135,29 +137,25 @@ class Processor:
              signal_queue: Queue,
              input_queue: Optional[Queue] = None,
              output_queues: Optional[List[Queue]] = None):
-        sleep_time = Processor.min_sleep_time
         while True:
             # Check for data from the signal queue
             if not signal_queue.empty():
                 signal = signal_queue.get()
-                if signal == Signals.shutdown:
+                if signal == Signals.shutdown.value:
                     logger.info(f"Shutting down instance {instance} for processor {processor_name}...")
                     return
             # Check for input if an input queue exists. If so, get input data from queue
             result = None
             if input_queue:
-                if not input_queue.empty():
-                    input = input_queue.get()
+                try:
+                    # Get data from input queue and run the target function with that input
+                    input = input_queue.get(timeout=1)
                     result = target_function(input)
-                    # Reset sleep time since we got data
-                    sleep_time = Processor.min_sleep_time
                     # Update stats
                     with inputs_processed.get_lock():
                         inputs_processed.value += 1
-                    logger.info(f"Processed points for instance {instance}: {inputs_processed.value}")
-                else:
-                    sleep_time = Processor.update_sleep_time(sleep_time)
-                    time.sleep(sleep_time)
+                except queue.Empty:
+                    pass
             # Otherwise, call target function without arguments
             else:
                 result = target_function()
@@ -165,10 +163,3 @@ class Processor:
             if output_queues and result:
                 for output_queue in output_queues:
                     output_queue.put(result)
-
-    @staticmethod
-    def update_sleep_time(current_sleep_time: Union[float, int]) -> Union[float, int]:
-        if current_sleep_time <= Processor.max_sleep_time:
-            return current_sleep_time * 2
-        else:
-            return Processor.max_sleep_time

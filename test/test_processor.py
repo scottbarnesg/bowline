@@ -66,7 +66,8 @@ class TestProcessorChain(unittest.TestCase):
             # Start the processor
             addition_processor.start()
             # Push lots of data to the processor
-            for _ in range(10):
+            num_inputs = 100
+            for _ in range(num_inputs):
                 input = AddInputModel(x=random.randint(0, 1000), y=random.randint(0, 1000))
                 addition_processor.push_input(input)
             # Wait for processing to finish
@@ -76,6 +77,7 @@ class TestProcessorChain(unittest.TestCase):
             print(stats)
             assert stats[0][Stats.inputs_processed.value].value > 0
             assert stats[1][Stats.inputs_processed.value].value > 0
+            assert stats[0][Stats.inputs_processed.value].value + stats[1][Stats.inputs_processed.value].value == num_inputs
         finally:
             # Shut down the processor
             addition_processor.shutdown()
