@@ -59,10 +59,9 @@ class Processor:
             for i in range(self.instances):
                 if self._processes[i].is_alive():
                     self._signal_queues[i].put(Signals.shutdown.value)
-                    logger.info(f"Waiting for process {self.name} instance {i} to shut down...")
+                    logger.debug(f"Waiting for process {self.name} instance {i} to shut down...")
                     self._processes[i].join(timeout=10)
             alive_processes = [process for process in self._processes if process.is_alive()]
-            logger.info(alive_processes)
 
     def push_input(self, input: BaseModel):
         if not self.input_model:
@@ -142,7 +141,7 @@ class Processor:
             if not signal_queue.empty():
                 signal = signal_queue.get()
                 if signal == Signals.shutdown.value:
-                    logger.info(f"Shutting down instance {instance} for processor {processor_name}...")
+                    logger.debug(f"Shutting down instance {instance} for processor {processor_name}...")
                     return
             # Check for input if an input queue exists. If so, get input data from queue
             result = None
