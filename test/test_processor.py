@@ -22,6 +22,10 @@ def add_two_numbers(input: AddInputModel) -> AddOutputModel:
     return AddOutputModel(result=result)
 
 
+def throws_exception(input: AddInputModel):
+    raise ValueError("This is a ValueError")
+
+
 class TestProcessorChain(unittest.TestCase):
     def test_processor(self):
         try:
@@ -77,7 +81,23 @@ class TestProcessorChain(unittest.TestCase):
             print(stats)
             assert stats[0][Stats.inputs_processed.value].value > 0
             assert stats[1][Stats.inputs_processed.value].value > 0
-            assert stats[0][Stats.inputs_processed.value].value + stats[1][Stats.inputs_processed.value].value == num_inputs
+            assert stats[0][Stats.inputs_processed.value].value + stats[1][
+                Stats.inputs_processed.value].value == num_inputs
+        finally:
+            # Shut down the processor
+            addition_processor.shutdown()
+
+    def test_target_function_throws_exception(self):
+        try:
+            addition_processor = Processor(target_function=throws_exception,
+                                           name="throws-exception",
+                                           input_model=AddInputModel)
+            # Start the processor
+            addition_processor.start()
+            # Push some input to the processor
+            addition_processor.push_input(AddInputModel(x=2, y=2))
+            # Wait for processor to run
+            time.sleep(1)
         finally:
             # Shut down the processor
             addition_processor.shutdown()

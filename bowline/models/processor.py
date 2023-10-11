@@ -150,7 +150,11 @@ class Processor:
                 try:
                     # Get data from input queue and run the target function with that input
                     input = input_queue.get(timeout=1)
-                    result = target_function(input)
+                    try:
+                        result = target_function(input)
+                    except Exception as e:
+                        logger.error(f"Target function {target_function} threw an exception")
+                        logger.error(e)
                     # Update stats
                     with inputs_processed.get_lock():
                         inputs_processed.value += 1
@@ -158,7 +162,11 @@ class Processor:
                     pass
             # Otherwise, call target function without arguments
             else:
-                result = target_function()
+                try:
+                    result = target_function()
+                except Exception as e:
+                    logger.error(f"Target function {target_function} threw an exception")
+                    logger.error(e)
             # If an output queue exists, push the result to the output queue
             if output_queues and result:
                 for output_queue in output_queues:
