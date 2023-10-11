@@ -247,6 +247,7 @@ Because Bowline uses `multiprocessing` behind the scenes, all data models must b
 
 1. Install the test dependencies: `python -m pip install -e .[dev]`
 2. Run the tests: `python -m pytest test/`
+3. Or, to view log output while running tests: `python -m pytest --capture=no --log-cli-level=INFO test/test_processor.py`
 
 ## FAQ
 
