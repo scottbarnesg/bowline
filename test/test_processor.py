@@ -1,6 +1,7 @@
 import random
 import time
 import unittest
+from typing import Dict
 
 from pydantic import BaseModel
 
@@ -24,6 +25,15 @@ def add_two_numbers(input: AddInputModel) -> AddOutputModel:
 
 def throws_exception(input: AddInputModel):
     raise ValueError("This is a ValueError")
+
+
+def add_two_numbers_to_generated_number(input: AddInputModel, generated_number: int) -> AddOutputModel:
+    result = input.x + input.y + generated_number
+    return AddOutputModel(result=result)
+
+
+def generate_number() -> Dict[str, any]:
+    return {"generated_number": 10}
 
 
 class TestProcessorChain(unittest.TestCase):
@@ -98,6 +108,41 @@ class TestProcessorChain(unittest.TestCase):
             addition_processor.push_input(AddInputModel(x=2, y=2))
             # Wait for processor to run
             time.sleep(1)
+        finally:
+            # Shut down the processor
+            addition_processor.shutdown()
+
+    def test_setup_function(self):
+        try:
+            addition_processor = Processor(target_function=add_two_numbers_to_generated_number,
+                                           name="add",
+                                           input_model=AddInputModel,
+                                           output_model=AddOutputModel,
+                                           setup_function=generate_number)
+            # Start the processor
+            addition_processor.start()
+            # Push data to the processor
+            first_input_model = AddInputModel(x=2, y=2)
+            addition_processor.push_input(first_input_model)
+            second_input_model = AddInputModel(x=3, y=4)
+            addition_processor.push_input(second_input_model)
+            third_input_model = AddInputModel(x=123, y=456)
+            addition_processor.push_input(third_input_model)
+            generated_int = generate_number()['generated_number']
+            # Wait for results
+            while not addition_processor.has_output():
+                pass
+            # Verify the result are correct
+            first_output = addition_processor.get_output()
+            assert first_output.output == add_two_numbers_to_generated_number(first_input_model, generated_int)
+            while not addition_processor.has_output():
+                pass
+            second_output = addition_processor.get_output()
+            assert second_output.output == add_two_numbers_to_generated_number(second_input_model, generated_int)
+            while not addition_processor.has_output():
+                pass
+            third_output = addition_processor.get_output()
+            assert third_output.output == add_two_numbers_to_generated_number(third_input_model, generated_int)
         finally:
             # Shut down the processor
             addition_processor.shutdown()

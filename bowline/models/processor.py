@@ -25,11 +25,13 @@ class Processor:
                  name: str,
                  input_model: Optional[Type[BaseModel]] = None,
                  output_model: Optional[Type[BaseModel]] = None,
+                 setup_function: Optional[Callable] = None,
                  instances: Optional[int] = 1):
         self.target_function = target_function
         self.name = name
         self.input_model = input_model
         self.output_model = output_model
+        self.setup_function = setup_function
         self.instances = instances
         self._signal_queues = [Queue() for _ in range(instances)]
         self._input_queue = None
@@ -44,9 +46,13 @@ class Processor:
             raise RuntimeError(f"This processor has already been started. You cannot start it again.")
         for instance in range(self.instances):
             process = Process(target=self._run,
-                              args=(self.name, instance, self.target_function,
-                                    self._stats[instance][Stats.inputs_processed.value], self._signal_queues[instance],
-                                    self._input_queue, self._output_queues))
+                              args=(self.name, instance,
+                                    self.target_function,
+                                    self._stats[instance][Stats.inputs_processed.value],
+                                    self._signal_queues[instance],
+                                    self._input_queue,
+                                    self._output_queues,
+                                    self.setup_function))
             self._processes.append(process)
         logger.info(f"Starting processor {self.name}...")
         for process in self._processes:
@@ -135,7 +141,13 @@ class Processor:
              inputs_processed: Value,
              signal_queue: Queue,
              input_queue: Optional[Queue] = None,
-             output_queues: Optional[List[Queue]] = None):
+             output_queues: Optional[List[Queue]] = None,
+             setup_function: Optional[Callable] = None):
+        # Run setup function if present. Output from the setup function will be passed as kwargs to the target function
+        kwargs = {}
+        if setup_function:
+            kwargs = setup_function()
+        # Start processor loop
         while True:
             # Check for data from the signal queue
             if not signal_queue.empty():
@@ -150,7 +162,7 @@ class Processor:
                     # Get data from input queue and run the target function with that input
                     input = input_queue.get(timeout=1)
                     try:
-                        result = target_function(input)
+                        result = target_function(input, **kwargs)
                     except Exception as e:
                         logger.error(f"Target function {target_function} threw an exception")
                         logger.error(e)
@@ -162,7 +174,7 @@ class Processor:
             # Otherwise, call target function without arguments
             else:
                 try:
-                    result = target_function()
+                    result = target_function(**kwargs)
                 except Exception as e:
                     logger.error(f"Target function {target_function} threw an exception")
                     logger.error(e)
