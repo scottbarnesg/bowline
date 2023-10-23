@@ -60,7 +60,7 @@ class ProcessorChain:
             logger.debug(
                 f"Setting output queue of {previous_processor.get_name()} as input queue of {processor.get_name()}"
             )
-            processor.set_input_queue(previous_processor.get_output_queue())
+            processor.get_input_from(previous_processor)  # TODO: Refactor to generic "link to" function
 
     def shutdown(self):
         for processor in self.processors:
