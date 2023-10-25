@@ -11,14 +11,14 @@ class AddOutputModel(BaseModel):
     result: int
 
 
-def add_and_print(input: AddInputModel) -> AddOutputModel:
+def add_two_numbers(input: AddInputModel) -> AddOutputModel:
     result = input.x + input.y
     return AddOutputModel(result=result)
 
 
 if __name__ == '__main__':
     # Create and start processor
-    addition_processor = Processor(target_function=add_and_print,
+    addition_processor = Processor(target_function=add_two_numbers,
                                    name="add",
                                    input_model=AddInputModel,
                                    output_model=AddOutputModel)

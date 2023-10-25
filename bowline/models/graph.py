@@ -91,10 +91,8 @@ class ProcessorGraph:
                 # Validate that the output type of the source matches the input type of the target
                 if type(source_processor.get_output_model()) is not type(target_processor.get_input_model()):
                     raise ValueError(f"Target Processor {target_processor} expected {type(target_processor.get_input_model())}, but Source Processor {source_processor} provides {type(source_processor.get_output_model())}")
-                # Create an output queue in the source and make it the input queue for the target
-                new_queue = Queue()
-                source_processor.add_output_queue(new_queue)
-                target_processor.set_input_queue(new_queue)
+                # Link the source processor to the target processor
+                target_processor.get_input_from(source_processor)
                 logger.info(f"Setting output queue of {source_processor.get_name()} as input queue of {target_processor.get_name()}")
 
     def _start_all_processors(self):
