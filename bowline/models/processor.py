@@ -1,4 +1,5 @@
 import queue
+import time
 from enum import Enum
 from multiprocessing import Process, Queue, Value
 from typing import Optional, Callable, List, Type, Dict
@@ -26,12 +27,14 @@ class Processor:
                  input_model: Optional[Type[BaseModel]] = None,
                  output_model: Optional[Type[BaseModel]] = None,
                  setup_function: Optional[Callable] = None,
+                 delay: Optional[int] = None,
                  instances: Optional[int] = 1):
         self.target_function = target_function
         self.name = name
         self.input_model = input_model
         self.output_model = output_model
         self.setup_function = setup_function
+        self.delay = delay
         self.instances = instances
         self._signal_queues = [Queue() for _ in range(instances)]
         self._input_queue = None
@@ -52,7 +55,8 @@ class Processor:
                                     self._signal_queues[instance],
                                     self._input_queue,
                                     self._output_queues,
-                                    self.setup_function))
+                                    self.setup_function,
+                                    self.delay))
             self._processes.append(process)
         logger.info(f"Starting processor {self.name}...")
         for process in self._processes:
@@ -142,7 +146,8 @@ class Processor:
              signal_queue: Queue,
              input_queue: Optional[Queue] = None,
              output_queues: Optional[List[Queue]] = None,
-             setup_function: Optional[Callable] = None):
+             setup_function: Optional[Callable] = None,
+             delay: Optional[int] = None):
         # Run setup function if present. Output from the setup function will be passed as kwargs to the target function
         kwargs = {}
         if setup_function:
@@ -182,3 +187,6 @@ class Processor:
             if output_queues and result:
                 for output_queue in output_queues:
                     output_queue.put(result)
+            # If delay is set, sleep for that duration
+            if delay:
+                time.sleep(delay)
