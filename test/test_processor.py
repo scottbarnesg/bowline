@@ -146,3 +146,44 @@ class TestProcessorChain(unittest.TestCase):
         finally:
             # Shut down the processor
             addition_processor.shutdown()
+
+    def test_processor_delay(self):
+        try:
+            delay = 2
+            addition_processor = Processor(target_function=add_two_numbers,
+                                           name="add",
+                                           input_model=AddInputModel,
+                                           output_model=AddOutputModel,
+                                           delay=delay)
+            # Start the processor
+            addition_processor.start()
+            # Push data to the processor
+            first_input_model = AddInputModel(x=2, y=2)
+            addition_processor.push_input(first_input_model)
+            second_input_model = AddInputModel(x=3, y=4)
+            addition_processor.push_input(second_input_model)
+            third_input_model = AddInputModel(x=123, y=456)
+            addition_processor.push_input(third_input_model)
+            # Wait for results
+            while not addition_processor.has_output():
+                pass
+            # Verify the result are correct
+            first_output = addition_processor.get_output()
+            assert first_output.output == add_two_numbers(first_input_model)
+            # Verify time to get next value is at least delay long
+            start_time = time.monotonic()
+            while not addition_processor.has_output():
+                pass
+            second_output = addition_processor.get_output()
+            assert round(time.monotonic() - start_time) >= delay
+            assert second_output.output == add_two_numbers(second_input_model)
+            # Verify time to get next value is at least delay long
+            start_time = time.monotonic()
+            while not addition_processor.has_output():
+                pass
+            assert round(time.monotonic() - start_time) >= delay
+            third_output = addition_processor.get_output()
+            assert third_output.output == add_two_numbers(third_input_model)
+        finally:
+            # Shut down the processor
+            addition_processor.shutdown()
