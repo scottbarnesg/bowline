@@ -11,6 +11,8 @@ throughput and computationally heavy workloads.
 - Simplicity: Bowline abstracts away the complexity of `multiprocessing` by handling process creation, 
 inter-process communication, and clean process shutdown.
 - Typing: Data inputs and ouputs are validated with `pydantic`.
+- Create Complex Pipelines: Bowline provides a `ProcessorChain` that chains processes together, and a `ProcessGraph` 
+to enable the creation of more complex, branching pipelines.
 
 
 ## Installation
@@ -19,7 +21,7 @@ inter-process communication, and clean process shutdown.
 
 ## Usage
 
-The following section describe the `Processor` and `ProcessorChain` classes.
+The following section describe the `Processor`, `ProcessorChain`, and `ProcessorGraph` classes.
 
 ### Processors
 
@@ -145,7 +147,7 @@ if __name__ == '__main__':
 
 ### Processor Graphs
 
-Processor Chains connect multiple Processors in a graph, such that the output of a Processor can be passed to multiple subsequent Processors.
+Processor Graphs connect multiple Processors in a graph, such that the output of a Processor can be passed to multiple subsequent Processors.
 This allows for the definition of pipelines that can run with an arbitrary number of branching processors within them.
 
 #### Example
@@ -256,12 +258,7 @@ _Why doesn't Bowline use asyncio?_
 Bowline is built on the `multiprocessing` library, so each `Processor` instance runs in its own process.
 This means that async functionality is generally not needed (although you are welcome to implement it in the functions you want Bowline to run).
 
-Bowline's primary use case is creating pipelines for streaming data that you want to perform computationally-heavy operations on. 
+Bowline's primary use case is creating high-throughput, low-latency pipelines for streaming data that you want to perform computationally-heavy operations on. 
 If you are looking for an async-first library that runs tasks in a single process and is designed for lighter workloads, a tool like Faust may be a better 
-fit for you use case. 
-
-_Why is it called Bowline?_
-
-The Bowline knot makes a reasonably secure loop in the end of a piece of rope. 
-Two bowlines can be linked together to join two ropes.
+fit for you use case.
  
