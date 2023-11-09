@@ -170,7 +170,7 @@ class Processor:
                         result = target_function(input, **kwargs)
                     except Exception as e:
                         logger.error(f"Target function {target_function} threw an exception")
-                        logger.error(e)
+                        logger.error(f"{type(e).__name__}: {e}")
                     # Update stats
                     with inputs_processed.get_lock():
                         inputs_processed.value += 1
@@ -182,7 +182,7 @@ class Processor:
                     result = target_function(**kwargs)
                 except Exception as e:
                     logger.error(f"Target function {target_function} threw an exception")
-                    logger.error(e)
+                    logger.error(f"{type(e).__name__}: {e}")
             # If an output queue exists, push the result to the output queue
             if output_queues and result:
                 for output_queue in output_queues:
