@@ -132,6 +132,8 @@ class Processor:
             self._input_queue = Queue()
         if self.output_model:
             # By default, create one output queue. This can be overridden using add_output_queue()
+            #  TODO: This is creating a dangling output queue for ProcessorGraph that must be cleared.
+            #    Is there a better way to handle this?
             self._output_queues = [Queue()]
         for i in range(self.instances):
             self._stats[i] = {
