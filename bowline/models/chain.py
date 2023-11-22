@@ -53,7 +53,7 @@ class ProcessorChain:
                 continue
             # Make sure the previous processor's output and current processor's input match
             previous_processor = self.processors[index - 1]
-            if type(previous_processor.get_output_model()) is not type(previous_processor.get_input_model()):
+            if type(previous_processor.get_output_model()) is not type(processor.get_input_model()):
                 raise ValueError(
                     f"The output type of Processor {previous_processor.get_name()} does not match the input type of Processor {processor.get_name()}, which are {previous_processor.get_output_model()} and {processor.get_input_model()}")
             # Get the ouput queue of the previous processor and make it the input of this processor
