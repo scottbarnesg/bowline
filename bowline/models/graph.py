@@ -22,7 +22,7 @@ class ProcessorGraph:
 
     def add_processor(self, new_processor: Processor, previous_processor: Optional[Processor] = None):
         # If previous_processor is not supplied, this is the first processor.
-        if not previous_processor:  # TODO: Logic got mixed up here.
+        if not previous_processor:
             # If the graph isn't empty, need a previous_processor to link new_processor to
             if self._processor_graph:
                 raise ValueError("ProcessorGraph already contains one or more Processors. "
@@ -87,6 +87,7 @@ class ProcessorGraph:
     def _build_processor_chain(self):
         # Walk the processor graph.
         for source_processor, target_processors in self._processor_graph.items():
+            source_processor.clear_output_queues()  # Clear output queues to prevent creation of hanging output queues.
             for target_processor in target_processors:
                 # Validate that the output type of the source matches the input type of the target
                 if type(source_processor.get_output_model()) is not type(target_processor.get_input_model()):
