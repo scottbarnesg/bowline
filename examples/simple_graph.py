@@ -1,4 +1,5 @@
 import math
+import time
 
 from pydantic import BaseModel
 
@@ -61,7 +62,8 @@ if __name__ == '__main__':
     processor_graph.add_processor(square_number_processor, add_two_numbers_processor)
     processor_graph.add_processor(square_root_processor, add_two_numbers_processor)
     # Start the ProcessorGraph
-    processor_graph.start()
+    processor_graph.start(remove_output_queues=False)
+    processor_graph.print_terminal_processor()
     # Push input to graph
     processor_graph.push_input(AddInputModel(x=2, y=2))
     processor_graph.push_input(AddInputModel(x=3, y=4))

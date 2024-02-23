@@ -43,9 +43,26 @@ class ProcessorConfig:
                 processor_chain.add_processor(processor)
             return processor_chain
         elif processor_container_type == ConfigTypes.graph:
-            processor_container = ProcessorGraph()
+            processor_graph = ProcessorGraph()
+            # Each ProcessorGraph should start with one "entrypoint" Processor
+            processor_data = self._config_data[ConfigTypes.graph.value][ConfigKeys.processors.value][0]
             # TODO: Recursively parse the config data to generate processors and add them to the
-            return processor_container
+            self._parse_graph_processors(processor_data, processor_graph)
+            return processor_graph
+
+    def _parse_graph_processors(self, processor_data: Dict[str, any], processor_graph: ProcessorGraph,
+                                processor_parent: Processor = None):
+        # Use processor_data to generate a Processor and add it to the ProcessorGraph
+        processor_name = list(processor_data.keys())[0]
+        target_function = processor_data[processor_name][ConfigKeys.target_function.value]
+        input_model = processor_data[processor_name][ConfigKeys.input_model.value]
+        output_model = processor_data[processor_name][ConfigKeys.output_model.value]
+        processor = self.generate_processor(processor_name, target_function, input_model, output_model)
+        processor_graph.add_processor(processor, processor_parent)
+        # If this processor has children, recursively parse them
+        if ConfigKeys.processors.value in processor_data[processor_name].keys():
+            for child_processor_data in processor_data['addition']['processors']:
+                self._parse_graph_processors(child_processor_data, processor_graph, processor)
 
     def generate_processor(self, processor_name: str, target_function_import_path: str, input_model_import_path: str,
                            output_model_import_path: str) -> Processor:
