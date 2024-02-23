@@ -1,0 +1,10 @@
+chain:
+  processors:
+    - add:
+        target_function: examples.simple_chain.add_two_numbers
+        input_model: examples.simple_chain.AddInputModel
+        output_model: examples.simple_chain.AddOutputModel
+    - square:
+        target_function: examples.simple_chain.square_number
+        input_model: examples.simple_chain.AddOutputModel
+        output_model: examples.simple_chain.SquareOutputModel

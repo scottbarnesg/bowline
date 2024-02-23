@@ -1,5 +1,6 @@
-from typing import Optional, List
+from typing import Optional, List, Dict
 
+import yaml
 from pydantic import BaseModel
 
 from bowline.models.processor import Processor
@@ -10,7 +11,12 @@ logger = get_logger(__name__)
 
 
 class ProcessorChain:
-    def __init__(self, processors: Optional[List[Processor]] = None):
+    def __init__(self, configuration_file_path: Optional[str] = None, processors: Optional[List[Processor]] = None):
+        if configuration_file_path and processors:
+            raise ValueError("Providing both a configuration file and a list of processors is not supported.")
+        self.configuration_file_path = configuration_file_path
+        if self.configuration_file_path:
+            self._config = self._load_configuration_file(self.configuration_file_path)
         self.processors = processors
         if not self.processors:
             self.processors = []
@@ -24,7 +30,7 @@ class ProcessorChain:
     def push_input(self, input: BaseModel):
         if not self.processors:
             raise ValueError("There are no processors in the chain. You must add processors before you can push data.")
-        if not type(input) == self.processors[0].get_input_model():
+        if type(input) != self.processors[0].get_input_model():
             raise ValueError(f"Input is of type {type(input)}, but the {self.processors[0].get_name()} processor expects a {self.processors[0].get_input_model()}")
         self.processors[0].push_input(input)
 
@@ -65,3 +71,9 @@ class ProcessorChain:
     def shutdown(self):
         for processor in self.processors:
             processor.shutdown()
+
+    @staticmethod
+    def _load_configuration_file(file_path: str) -> Dict[str, any]:
+        with open(file_path) as f:
+            config_data = yaml.safe_load(f)
+        return config_data
