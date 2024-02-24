@@ -14,7 +14,7 @@ classifiers = [
 ]
 dependencies=[
     "pydantic",
-    "pyyaml"
+    "pyyaml >= 6.0.1"
 ]
 
 [project.optional-dependencies]

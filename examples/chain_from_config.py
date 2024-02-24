@@ -4,7 +4,7 @@ from simple_chain import AddInputModel
 if __name__ == '__main__':
     # Create process chain from config file
     config_file_path = "examples/chain-config.yml"
-    config = ProcessorConfig(config_file_path)  # TODO: Refactor this so that you can just pass the config to a ProcessorChain()
+    config = ProcessorConfig(config_file_path)
     processor_chain = config.generate_processors()
     # Start the processor chain
     processor_chain.start()
