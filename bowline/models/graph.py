@@ -72,11 +72,11 @@ class ProcessorGraph:
         # Return that output queue
         return self._get_terminal_processors()[self._current_terminal_processor_index]
 
-    def start(self, remove_output_queues: bool = True):
+    def start(self, include_output_queues: bool = True):
         if not self._processor_graph:
             raise ValueError("There are no processors in the graph. Nothing to start.")
         # Build processor graph
-        self._build_processor_graph(remove_output_queues)
+        self._build_processor_graph(include_output_queues)
         # Start processors
         self._start_all_processors()
 
@@ -88,14 +88,10 @@ class ProcessorGraph:
         for index, processor in enumerate(self._get_terminal_processors()):
             print(f"Terminal processor {index}: {processor.get_name()}")
 
-    # TODO: This is wiping the single output queue created by default for each processor.
-    #   Maybe we should pass in a parameter that allows this to be enabled/disabled.
-    #   For example, if we are publishing the output to Kafka, we don't want an output queue. This would cause a memory leak.
-    #   But in the examples, we want an output queue so that we can get the results out and verify them.
-    def _build_processor_graph(self, remove_output_queues: bool):
+    def _build_processor_graph(self, include_output_queues: bool):
         # Walk the processor graph.
         for source_processor, target_processors in self._processor_graph.items():
-            if remove_output_queues:
+            if not include_output_queues:
                 source_processor.clear_output_queues()  # Clear output queues to prevent creation of hanging output queues.
             for target_processor in target_processors:
                 # Validate that the output type of the source matches the input type of the target

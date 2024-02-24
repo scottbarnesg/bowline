@@ -4,10 +4,10 @@ from simple_graph import AddInputModel
 if __name__ == '__main__':
     # Create process chain from config file
     config_file_path = "examples/graph-config.yml"
-    config = ProcessorConfig(config_file_path) # TODO: Refactor this so that you can just pass the config path to a ProcessorGraph()
+    config = ProcessorConfig(config_file_path)
     processor_graph = config.generate_processors()
     # Start the ProcessorGraph
-    processor_graph.start(remove_output_queues=False)
+    processor_graph.start()
     processor_graph.print_terminal_processor()
     # Push input to graph
     processor_graph.push_input(AddInputModel(x=2, y=2))
