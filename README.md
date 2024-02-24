@@ -236,6 +236,73 @@ if __name__ == '__main__':
     processor_graph.shutdown()
 ```
 
+## Configuration-Driven Pipelines
+
+You can also create pipelines via a yaml configuration file, for both `ProcessorChain`s and `ProcessorGraph`s.
+
+### ProcessorChain
+
+Example `yaml` configuration file, in which the `add` Processor provides input to the `square` Processor.
+
+```yaml
+chain:
+  processors:
+    - add:
+        target_function: simple_chain.add_two_numbers
+        input_model: simple_chain.AddInputModel
+        output_model: simple_chain.AddOutputModel
+    - square:
+        target_function: simple_chain.square_number
+        input_model: simple_chain.AddOutputModel
+        output_model: simple_chain.SquareOutputModel
+```
+
+Example code:
+
+```python
+from bowline.utils.config import ProcessorConfig
+# Create process chain from config file
+config_file_path = "examples/chain-config.yml"
+config = ProcessorConfig(config_file_path)
+processor_chain = config.generate_processors()
+# Start the processor chain
+processor_chain.start()
+```
+
+### ProcessorGraph
+
+Example `yaml` configuration file, which definesa graph in which the `addition` Processor provides inputs to the `square` and `sqrt` Processors:
+
+```yaml
+graph:
+  processors:
+    - addition:
+        target_function: simple_graph.add_two_numbers
+        input_model: simple_graph.AddInputModel
+        output_model: simple_graph.AddOutputModel
+        processors:
+          - square:
+              target_function: simple_graph.square_number
+              input_model: simple_graph.AddOutputModel
+              output_model: simple_graph.SquareOutputModel
+          - sqrt:
+              target_function: simple_graph.square_root
+              input_model: simple_graph.AddOutputModel
+              output_model: simple_graph.SquareRootOutputModel
+```
+
+Example code:
+
+```python
+from bowline.utils.config import ProcessorConfig
+# Create process chain from config file
+config_file_path = "examples/graph-config.yml"
+config = ProcessorConfig(config_file_path)
+processor_graph = config.generate_processors()
+# Start the ProcessorGraph
+processor_graph.start()
+```
+
 ## Considerations
 
 Because Bowline uses `multiprocessing` behind the scenes, all data models must be serializable. 

@@ -1,5 +1,6 @@
-from typing import Optional, List
+from typing import Optional, List, Dict
 
+import yaml
 from pydantic import BaseModel
 
 from bowline.models.processor import Processor
@@ -24,7 +25,7 @@ class ProcessorChain:
     def push_input(self, input: BaseModel):
         if not self.processors:
             raise ValueError("There are no processors in the chain. You must add processors before you can push data.")
-        if not type(input) == self.processors[0].get_input_model():
+        if type(input) != self.processors[0].get_input_model():
             raise ValueError(f"Input is of type {type(input)}, but the {self.processors[0].get_name()} processor expects a {self.processors[0].get_input_model()}")
         self.processors[0].push_input(input)
 

@@ -72,11 +72,11 @@ class ProcessorGraph:
         # Return that output queue
         return self._get_terminal_processors()[self._current_terminal_processor_index]
 
-    def start(self):
+    def start(self, include_output_queues: bool = True):
         if not self._processor_graph:
             raise ValueError("There are no processors in the graph. Nothing to start.")
         # Build processor graph
-        self._build_processor_chain()
+        self._build_processor_graph(include_output_queues)
         # Start processors
         self._start_all_processors()
 
@@ -84,10 +84,11 @@ class ProcessorGraph:
         for processor in self._processor_graph.keys():
             processor.shutdown()
 
-    def _build_processor_chain(self):
+    def _build_processor_graph(self, include_output_queues: bool):
         # Walk the processor graph.
         for source_processor, target_processors in self._processor_graph.items():
-            source_processor.clear_output_queues()  # Clear output queues to prevent creation of hanging output queues.
+            if not include_output_queues:
+                source_processor.clear_output_queues()  # Clear output queues to prevent creation of hanging output queues.
             for target_processor in target_processors:
                 # Validate that the output type of the source matches the input type of the target
                 if type(source_processor.get_output_model()) is not type(target_processor.get_input_model()):
