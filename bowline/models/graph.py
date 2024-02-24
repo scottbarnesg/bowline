@@ -84,10 +84,6 @@ class ProcessorGraph:
         for processor in self._processor_graph.keys():
             processor.shutdown()
 
-    def print_terminal_processor(self):
-        for index, processor in enumerate(self._get_terminal_processors()):
-            print(f"Terminal processor {index}: {processor.get_name()}")
-
     def _build_processor_graph(self, include_output_queues: bool):
         # Walk the processor graph.
         for source_processor, target_processors in self._processor_graph.items():

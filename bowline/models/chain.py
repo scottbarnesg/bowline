@@ -11,12 +11,7 @@ logger = get_logger(__name__)
 
 
 class ProcessorChain:
-    def __init__(self, configuration_file_path: Optional[str] = None, processors: Optional[List[Processor]] = None):
-        if configuration_file_path and processors:
-            raise ValueError("Providing both a configuration file and a list of processors is not supported.")
-        self.configuration_file_path = configuration_file_path
-        if self.configuration_file_path:
-            self._config = self._load_configuration_file(self.configuration_file_path)
+    def __init__(self, processors: Optional[List[Processor]] = None):
         self.processors = processors
         if not self.processors:
             self.processors = []
@@ -71,9 +66,3 @@ class ProcessorChain:
     def shutdown(self):
         for processor in self.processors:
             processor.shutdown()
-
-    @staticmethod
-    def _load_configuration_file(file_path: str) -> Dict[str, any]:
-        with open(file_path) as f:
-            config_data = yaml.safe_load(f)
-        return config_data
