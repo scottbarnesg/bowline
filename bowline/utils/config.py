@@ -1,6 +1,6 @@
 from enum import Enum
 from importlib import import_module
-from typing import Dict, Union
+from typing import Dict, Union, Optional
 
 import yaml
 
@@ -17,6 +17,9 @@ class ConfigKeys(Enum):
     target_function = "target_function"
     input_model = "input_model"
     output_model = "output_model"
+    setup_function = "setup_function"
+    delay = "delay"
+    instances = "instances"
 
 
 class ProcessorConfig:
@@ -37,16 +40,22 @@ class ProcessorConfig:
             for processor_entry in processor_data:
                 processor_name = list(processor_entry.keys())[0]
                 target_function = processor_entry[processor_name][ConfigKeys.target_function.value]
-                input_model = processor_entry[processor_name][ConfigKeys.input_model.value]
-                output_model = processor_entry[processor_name][ConfigKeys.output_model.value]
-                processor = self.generate_processor(processor_name, target_function, input_model, output_model)
+                # Handle optional config values
+                input_model = processor_entry[processor_name].get(ConfigKeys.input_model.value)
+                output_model = processor_entry[processor_name].get(ConfigKeys.output_model.value)
+                setup_function = processor_entry[processor_name].get(ConfigKeys.setup_function.value)
+                delay = processor_entry[processor_name].get(ConfigKeys.delay.value)
+                instances = processor_entry[processor_name].get(ConfigKeys.instances.value)
+                # Generate the processor and add it to the chain.
+                processor = self.generate_processor(processor_name, target_function, input_model, output_model,
+                                                    setup_function, delay, instances)
                 processor_chain.add_processor(processor)
             return processor_chain
         elif processor_container_type == ConfigTypes.graph:
             processor_graph = ProcessorGraph()
             # Each ProcessorGraph should start with one "entrypoint" Processor
             processor_data = self._config_data[ConfigTypes.graph.value][ConfigKeys.processors.value][0]
-            # TODO: Recursively parse the config data to generate processors and add them to the
+            # Recursively parse the config data to generate processors and add them to the
             self._parse_graph_processors(processor_data, processor_graph)
             return processor_graph
 
@@ -55,35 +64,65 @@ class ProcessorConfig:
         # Use processor_data to generate a Processor and add it to the ProcessorGraph
         processor_name = list(processor_data.keys())[0]
         target_function = processor_data[processor_name][ConfigKeys.target_function.value]
-        input_model = processor_data[processor_name][ConfigKeys.input_model.value]
-        output_model = processor_data[processor_name][ConfigKeys.output_model.value]
-        processor = self.generate_processor(processor_name, target_function, input_model, output_model)
+        # Handle optional config values
+        input_model = processor_data[processor_name].get(ConfigKeys.input_model.value)
+        output_model = processor_data[processor_name].get(ConfigKeys.output_model.value)
+        setup_function = processor_data[processor_name].get(ConfigKeys.setup_function.value)
+        delay = processor_data[processor_name].get(ConfigKeys.delay.value)
+        instances = processor_data[processor_name].get(ConfigKeys.instances.value)
+        processor = self.generate_processor(processor_name, target_function, input_model, output_model, setup_function,
+                                            delay, instances)
         processor_graph.add_processor(processor, processor_parent)
         # If this processor has children, recursively parse them
         if ConfigKeys.processors.value in processor_data[processor_name].keys():
             for child_processor_data in processor_data['addition']['processors']:
                 self._parse_graph_processors(child_processor_data, processor_graph, processor)
 
-    def generate_processor(self, processor_name: str, target_function_import_path: str, input_model_import_path: str,
-                           output_model_import_path: str) -> Processor:
+    def generate_processor(self,
+                           processor_name: str,
+                           target_function_import_path: str,
+                           input_model_import_path: Optional[str],
+                           output_model_import_path: Optional[str],
+                           setup_function_import_path: Optional[str],
+                           delay: Optional[int],
+                           instances: Optional[int]) -> Processor:
         # Dynamically import the dependencies
         # Target function
         target_function_module_name, target_function_name = target_function_import_path.rsplit('.', 1)
         target_function_module = import_module(target_function_module_name)
         target_function = getattr(target_function_module, target_function_name)
         # Input model
-        input_model_module_name, input_model_name = input_model_import_path.rsplit('.', 1)
-        input_model_module = import_module(input_model_module_name)
-        input_model = getattr(input_model_module, input_model_name)
+        if input_model_import_path:
+            input_model_module_name, input_model_name = input_model_import_path.rsplit('.', 1)
+            input_model_module = import_module(input_model_module_name)
+            input_model = getattr(input_model_module, input_model_name)
+        else:
+            input_model = None
         # Output model
-        output_model_module_name, output_model_name = output_model_import_path.rsplit('.', 1)
-        output_model_module = import_module(output_model_module_name)
-        output_model = getattr(output_model_module, output_model_name)
+        if output_model_import_path:
+            output_model_module_name, output_model_name = output_model_import_path.rsplit('.', 1)
+            output_model_module = import_module(output_model_module_name)
+            output_model = getattr(output_model_module, output_model_name)
+        else:
+            output_model = None
+        # Setup function
+        if setup_function_import_path:
+            setup_function_module_name, setup_function_name = setup_function_import_path.rsplit('.', 1)
+            setup_function_module = import_module(setup_function_module_name)
+            setup_function = getattr(setup_function_module, setup_function_name)
+        else:
+            setup_function = None
+        # Instances
+        if not instances:
+            instances = 1
         return Processor(
             name=processor_name,
             target_function=target_function,
             input_model=input_model,
-            output_model=output_model
+            output_model=output_model,
+            setup_function=setup_function,
+            delay=delay,
+            instances=instances
         )
 
     def _get_processor_container_type(self) -> ConfigTypes:
